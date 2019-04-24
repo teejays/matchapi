@@ -32,6 +32,8 @@ func startServer() error {
 		Methods("GET")
 	v1.HandleFunc("/user", user.HandleGetUser).
 		Methods("GET")
+	v1.HandleFunc("/user", user.HandleUpdateUserProfile).
+		Methods("POST")
 
 	http.Handle("/", r)
 
