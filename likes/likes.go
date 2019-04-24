@@ -3,18 +3,18 @@ package likes
 import (
 	"time"
 
-	"github.com/teejays/matchapi/users"
+	"github.com/teejays/matchapi/user"
 )
 
 // LikeAction represents the like action
 type LikeAction struct {
-	LikedBy  users.UserID
-	Liked    users.UserID
+	LikedBy  user.UserID
+	Liked    user.UserID
 	Datetime time.Time
 }
 
 // GetIncomingLikesByUserID returns all the users that have like the provided UserID
-func GetIncomingLikesByUserID(userID users.UserID) ([]LikeAction, error) {
+func GetIncomingLikesByUserID(userID user.UserID) ([]LikeAction, error) {
 	var likes = []LikeAction{}
 	for _, l := range mockLikes {
 		if l.Liked == userID {

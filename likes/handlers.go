@@ -6,7 +6,7 @@ import (
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/users"
+	"github.com/teejays/matchapi/user"
 )
 
 var cleanHTTPRespErrorMessage = "There was an error processing the request. Please see the application logs"
@@ -17,7 +17,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	clog.Infof("Request received for %s", "HandleGetIncomingLikes")
 
 	// Get the userID from the request
-	userID, err := users.GetUserIDMuxVar(r)
+	userID, err := user.GetUserIDMuxVar(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "userID is not a number", http.StatusBadRequest)
