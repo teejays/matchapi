@@ -8,16 +8,27 @@ import (
 // UserID is a type alias to allow more control over the underlying data type of the UserID field
 type UserID int
 
+// Profile represents the editable part of the User
+type Profile struct {
+	FirstName string
+	LastName  string
+	Email     string
+	Gender    int
+}
+
 // User represents the primary user object of the app
 type User struct {
 	ID              UserID
-	FirstName       string
-	LastName        string
-	Email           string
-	Gender          int
 	DatetimeCreated time.Time
 	DatetimeUpdated time.Time
 	IsDeleted       bool
+	Profile
+}
+
+// UpdateProfile ...
+func (u *User) UpdateProfile(profile Profile) error {
+	u.Profile = profile
+	return nil
 }
 
 const (
@@ -27,7 +38,7 @@ const (
 )
 
 // ErrEntityDoesNotExist is used when the requested entity does not exist in the system
-var ErrEntityDoesNotExist error = errors.New("the requested entity does not exist")
+var ErrEntityDoesNotExist = errors.New("the requested entity does not exist")
 
 // GetUsers returns all the users in the system
 func GetUsers() ([]User, error) {
@@ -41,33 +52,51 @@ func GetUserByID(id UserID) (User, error) {
 	return user, err
 }
 
+// UpdateUserByID ...
+func UpdateUserByID(id UserID, profile Profile) (User, error) {
+	var user User
+
+	err := updateMockUserByID(id, profile)
+	if err != nil {
+		return user, err
+	}
+
+	return GetUserByID(id)
+}
+
 var mockUsers = map[UserID]User{
 	1: User{
 		ID:              1,
-		FirstName:       "John",
-		LastName:        "Doe",
-		Email:           "john.doe@email.com",
-		Gender:          GenderMale,
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
+		Profile: Profile{
+			FirstName: "John",
+			LastName:  "Doe",
+			Email:     "john.doe@email.com",
+			Gender:    GenderMale,
+		},
 	},
 	2: User{
 		ID:              2,
-		FirstName:       "Jane",
-		LastName:        "Doe",
-		Email:           "jane.doe@email.com",
-		Gender:          GenderFemale,
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
+		Profile: Profile{
+			FirstName: "Jane",
+			LastName:  "Doe",
+			Email:     "jane.doe@email.com",
+			Gender:    GenderFemale,
+		},
 	},
 	3: User{
 		ID:              3,
-		FirstName:       "Jack",
-		LastName:        "Does",
-		Email:           "jack.does@email.com",
-		Gender:          GenderOther,
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
+		Profile: Profile{
+			FirstName: "Jack",
+			LastName:  "Does",
+			Email:     "jack.does@email.com",
+			Gender:    GenderOther,
+		},
 	},
 }
 
@@ -88,4 +117,20 @@ func getMockUsers() []User {
 	}
 	return users
 
+}
+
+func updateMockUserByID(id UserID, profile Profile) error {
+	user, exists := mockUsers[id]
+	if !exists {
+		return ErrEntityDoesNotExist
+	}
+
+	err := (&user).UpdateProfile(profile)
+	if err != nil {
+		return err
+	}
+
+	mockUsers[id] = user
+
+	return nil
 }
