@@ -21,13 +21,6 @@ var ErrHTTPMethodNotSupported = errors.New("HTTP method is not supported")
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	clog.Infof("Request received for %s", "HandleGetIncomingLikes")
 
-	// Ensure that the method is GET
-	if r.Method != http.MethodGet {
-		clog.Error(ErrHTTPMethodNotSupported.Error())
-		w.Header().Add("Allow", http.MethodGet)
-		http.Error(w, ErrHTTPMethodNotSupported.Error(), http.StatusMethodNotAllowed)
-	}
-
 	var vars = mux.Vars(r)
 
 	userIDString := vars["userid"]
