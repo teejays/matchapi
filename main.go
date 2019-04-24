@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/v1/like"
-	"github.com/teejays/matchapi/v1/user"
+	"github.com/teejays/matchapi/service/v1/like"
+	"github.com/teejays/matchapi/service/v1/user"
 )
 
 const listenPort = 8080 // we should probably move this to a config file, env variable or command-line flag
@@ -36,7 +36,7 @@ func startServer() error {
 	v1.HandleFunc("/user", user.HandleUpdateUserProfile).
 		Methods("POST")
 
-	v1.HandleFunc("/likes/incoming", like.HandleGetIncomingLikes).
+	v1.HandleFunc("/like/incoming", like.HandleGetIncomingLikes).
 		Methods("GET")
 
 	// Register the handler

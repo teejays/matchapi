@@ -6,23 +6,26 @@ import (
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/v1/user"
+	"github.com/teejays/matchapi/rest"
+	"github.com/teejays/matchapi/service/v1/user"
 )
 
-var cleanHTTPRespErrorMessage = "There was an error processing the request. Please see the application logs"
-
 // HandleGetIncomingLikes ...
+// Example Request: curl -v localhost:8080/{userid}/v1/like/incoming
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 
 	clog.Infof("Request received for %s", "HandleGetIncomingLikes")
 
 	// Get the userID from the request
-	userID, err := user.GetUserIDMuxVar(r)
+	id, err := rest.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, "userID is not a number", http.StatusBadRequest)
+		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
 		return
 	}
+
+	// convert the id to the user.UserID type alias
+	userID := user.UserID(id)
 
 	clog.Debugf("userID: %d", userID)
 
@@ -30,7 +33,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	likes, err := GetIncomingLikesByUserID(userID)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, cleanHTTPRespErrorMessage, http.StatusInternalServerError)
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
 	}
 
@@ -40,7 +43,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(likes)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, cleanHTTPRespErrorMessage, http.StatusInternalServerError)
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
 	}
 
@@ -48,7 +51,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(resp)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, cleanHTTPRespErrorMessage, http.StatusInternalServerError)
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
 	}
 
