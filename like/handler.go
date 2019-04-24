@@ -1,4 +1,4 @@
-package likes
+package like
 
 import (
 	"encoding/json"

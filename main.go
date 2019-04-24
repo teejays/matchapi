@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/likes"
+	"github.com/teejays/matchapi/like"
 	"github.com/teejays/matchapi/user"
 )
 
@@ -28,7 +28,7 @@ func startServer() error {
 	// add user id info to it
 	v1 = v1.PathPrefix("/{userid}").Subrouter()
 
-	v1.HandleFunc("/likes/incoming", likes.HandleGetIncomingLikes).
+	v1.HandleFunc("/likes/incoming", like.HandleGetIncomingLikes).
 		Methods("GET")
 	v1.HandleFunc("/user", user.HandleGetUser).
 		Methods("GET")
