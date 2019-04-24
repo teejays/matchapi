@@ -2,6 +2,8 @@ package user
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -16,6 +18,34 @@ type Profile struct {
 	Gender    int
 }
 
+// Validate validates a profile before saving
+func (p Profile) Validate() error {
+	var errs []error
+
+	if strings.TrimSpace(p.FirstName) == "" {
+		errs = append(errs, fmt.Errorf("first name cannot be empty"))
+	}
+	if strings.TrimSpace(p.LastName) == "" {
+		errs = append(errs, fmt.Errorf("last name cannot be empty"))
+	}
+	if strings.TrimSpace(p.Email) == "" {
+		errs = append(errs, fmt.Errorf("email cannot be empty"))
+	}
+	if p.Gender < 1 || p.Gender > 3 {
+		errs = append(errs, fmt.Errorf("gender is invalid; possible values are 1 (male), 2 (female) and 3 (other)"))
+	}
+
+	if len(errs) > 0 {
+		var errMsg string
+		for i, err := range errs {
+			errMsg = fmt.Sprintf("%s\n%d) %v", errMsg, i+1, err)
+		}
+		return fmt.Errorf(errMsg)
+	}
+
+	return nil
+}
+
 // User represents the primary user object of the app
 type User struct {
 	ID              UserID
@@ -27,12 +57,16 @@ type User struct {
 
 // UpdateProfile ...
 func (u *User) UpdateProfile(profile Profile) error {
+	if err := profile.Validate(); err != nil {
+		return err
+	}
 	u.Profile = profile
 	return nil
 }
 
 const (
-	GenderMale int = iota
+	GenderInvalid int = iota
+	GenderMale
 	GenderFemale
 	GenderOther
 )

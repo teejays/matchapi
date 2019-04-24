@@ -34,7 +34,7 @@ func GetUserIDMuxVar(r *http.Request) (UserID, error) {
 }
 
 // HandleUpdateUserProfile ...
-// Example Request: curl -v -X "POST" localhost:8080/v1/1/user
+// Example Request: curl -v -X "POST" localhost:8080/v1/1/user -d '{"FirstName":"Jon","LastName":"Smith", "Email": "jon.smith@email.com", "Gender": 0}'
 func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	clog.Infof("Request received for %s", "HandleUpdateUserProfile")
@@ -66,6 +66,13 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate that the profile is has all required info
+	err = profile.Validate()
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, fmt.Sprintf("There was an error validating the request: %v", err), http.StatusBadRequest)
+		return
+	}
 	// Update the profile of the given user
 	user, err := UpdateUserByID(userID, profile)
 	if err != nil {

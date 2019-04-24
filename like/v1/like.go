@@ -3,7 +3,7 @@ package like
 import (
 	"time"
 
-	"github.com/teejays/matchapi/user"
+	"github.com/teejays/matchapi/user/v1"
 )
 
 // Like represents the like action
