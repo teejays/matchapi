@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/like/v1"
-	"github.com/teejays/matchapi/user/v1"
+	"github.com/teejays/matchapi/v1/like"
+	"github.com/teejays/matchapi/v1/user"
 )
 
 const listenPort = 8080 // we should probably move this to a config file, env variable or command-line flag

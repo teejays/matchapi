@@ -6,7 +6,7 @@ import (
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/user/v1"
+	"github.com/teejays/matchapi/v1/user"
 )
 
 var cleanHTTPRespErrorMessage = "There was an error processing the request. Please see the application logs"
