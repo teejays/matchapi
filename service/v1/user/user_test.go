@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	clog.LogLevel = 1
+	clog.LogLevel = 0
 }
 
 func helperPopulateMockData() error {
@@ -258,7 +258,7 @@ func TestUpdateProfile(t *testing.T) {
 var mockUsers = map[pk.ID]*User{
 	1: &User{
 		ID: 1,
-		Meta: Meta{
+		meta: meta{
 			DatetimeCreated: time.Now(),
 			DatetimeUpdated: time.Now(),
 		},
@@ -273,7 +273,7 @@ var mockUsers = map[pk.ID]*User{
 	},
 	2: &User{
 		ID: 2,
-		Meta: Meta{
+		meta: meta{
 			DatetimeCreated: time.Now(),
 			DatetimeUpdated: time.Now(),
 		},
@@ -288,7 +288,7 @@ var mockUsers = map[pk.ID]*User{
 	},
 	3: &User{
 		ID: 3,
-		Meta: Meta{
+		meta: meta{
 			DatetimeCreated: time.Now(),
 			DatetimeUpdated: time.Now(),
 		},

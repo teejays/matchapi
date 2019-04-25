@@ -25,11 +25,11 @@ type User struct {
 	ID        pk.ID
 	IsDeleted bool
 	Profile
-	Meta
+	meta
 }
 
-// Meta represents the system generated and required info that we don't need to worry about
-type Meta struct {
+// meta represents the system generated and required info that we don't need to worry about
+type meta struct {
 	DatetimeCreated time.Time
 	DatetimeUpdated time.Time
 }
