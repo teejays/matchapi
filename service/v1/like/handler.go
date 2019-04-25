@@ -7,6 +7,7 @@ import (
 	"github.com/teejays/clog"
 
 	"github.com/teejays/matchapi/lib/rest"
+	"github.com/teejays/matchapi/service/v1/user"
 )
 
 // HandleGetIncomingLikes ...
@@ -14,7 +15,7 @@ import (
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := rest.Authenticate(r)
+	userID, err := user.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)

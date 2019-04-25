@@ -15,13 +15,6 @@ import (
 // internal error details from the client
 var CleanAPIErrMessage = "There was an error processing the request. Please see the application logs"
 
-// Authenticate should implement the authentication logic. It should should at the auth token
-// and figure out what user context. Currently, this is not implemented and it only relies on
-// and explicitly passed userID in the route.
-func Authenticate(r *http.Request) (pk.ID, error) {
-	return GetUserIDMuxVar(r)
-}
-
 // GetUserIDMuxVar extracts the userid param out of the request route
 func GetUserIDMuxVar(r *http.Request) (pk.ID, error) {
 
