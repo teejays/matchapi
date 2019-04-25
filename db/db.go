@@ -2,9 +2,6 @@ package db
 
 import (
 	"fmt"
-	"math/rand"
-	"reflect"
-	"time"
 
 	"github.com/teejays/gofiledb"
 	"github.com/teejays/matchapi/lib/pk"
@@ -89,74 +86,17 @@ func SaveEntityByID(collection string, key pk.ID, entity interface{}) error {
 
 }
 
-// SaveNewEntity saves a new enity
+// SaveNewEntity ...
 func SaveNewEntity(collection string, entity interface{}) (pk.ID, error) {
-
-	// Get a new ID
-	id, err := GetNewEntityID(collection)
-	if err != nil {
-		return id, err
-	}
 
 	// Create a lock on the collection
 	lock(collection)
 	defer unlock(collection)
 
-	// Add the ID to the entity using reflect package
-
-	// - get the reflect.Value of the entity
-	v := reflect.ValueOf(entity)
-	v = v.Elem()
-	if v.Kind() != reflect.Struct {
-		return -1, fmt.Errorf("Cannot set the value of the ID (%d) of the new %s entity: entity is not a struct", id, collection)
-	}
-	fv := v.FieldByName("ID")
-	if !fv.IsValid() {
-		return -1, fmt.Errorf("Cannot set the value of the ID (%d) of the new %s entity: field value is not valid", id, collection)
-	}
-	if !fv.CanSet() {
-		return -1, fmt.Errorf("Cannot set the value of the ID (%d) of the new %s entity: cannot set the field value", id, collection)
-	}
-	// - get the reflect.Value of the ID
-	vID := reflect.ValueOf(id)
-	fv.Set(vID)
-
-	// Save the new entity
-	entity = v.Interface()
 	cl := GetClient()
-	err = cl.SetStruct(collection, gofiledb.Key(id), entity)
-	if err != nil {
-		return id, err
-	}
+	id, err := cl.SaveNewEntity(collection, entity)
 
-	return id, nil
-}
-
-// GetNewEntityID generates a unique pk.ID for the given collection
-func GetNewEntityID(collection string) (pk.ID, error) {
-	// Get an random ID
-	id := GetNewID()
-	// Check if it already exists
-	cl := GetClient()
-	_, err := cl.GetFile(collection, gofiledb.Key(id))
-	if gofiledb.IsNotExist(err) { // If the file doesn't exist, we're good to go
-		return id, nil
-	}
-	if err != nil {
-		return id, fmt.Errorf("generated the new id %d but could not verify that it is unique: %v", id, err)
-	}
-	return GetNewEntityID(collection)
-}
-
-// GetNewID generates a new unique ID for an entity
-func GetNewID() pk.ID {
-	minID := 100000
-	rng := 100000
-	seed := time.Now().UnixNano()
-	src := rand.NewSource(seed)
-	r := rand.New(src)
-	id := r.Intn(rng)
-	return pk.ID(id + minID)
+	return pk.ID(id), err
 }
 
 // Query ..

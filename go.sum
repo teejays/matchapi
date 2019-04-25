@@ -6,3 +6,5 @@ github.com/teejays/clog v0.0.0-20181107215916-71000d459f17 h1:RvR224w0psQD5ZVw4C
 github.com/teejays/clog v0.0.0-20181107215916-71000d459f17/go.mod h1:dcMcIXOmrb2E1KjdiZZfE+Kjh+G+SLfkmwv+uIc+3QU=
 github.com/teejays/gofiledb v0.0.0-20181108173333-86536f18b499 h1:CK3SFvsp2NeGP/OHdsAlPOMA2npC0+E+ThkhXSuBe7Y=
 github.com/teejays/gofiledb v0.0.0-20181108173333-86536f18b499/go.mod h1:RSjP6gCLgV5zdg5oruPgg5P4IZcDZRETF2i9VCjbmbg=
+github.com/teejays/gofiledb v0.0.0-20190425204928-95757b4a6a61 h1:IO7tODfoNJQzbQMExov0xDYdALiEzYIaL8Cj9gMvcI0=
+github.com/teejays/gofiledb v0.0.0-20190425204928-95757b4a6a61/go.mod h1:RSjP6gCLgV5zdg5oruPgg5P4IZcDZRETF2i9VCjbmbg=
