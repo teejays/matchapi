@@ -22,11 +22,16 @@ var ErrEntityDoesNotExist = errors.New("the requested entity does not exist")
 
 // User represents the primary user object of the app
 type User struct {
-	ID              pk.ID
+	ID        pk.ID
+	IsDeleted bool
+	Profile
+	Meta
+}
+
+// Meta represents the system generated and required info that we don't need to worry about
+type Meta struct {
 	DatetimeCreated time.Time
 	DatetimeUpdated time.Time
-	IsDeleted       bool
-	Profile
 }
 
 // Profile represents the editable part of the User
@@ -120,101 +125,6 @@ func (p Profile) Validate() error {
 		}
 		return fmt.Errorf(errMsg)
 	}
-
-	return nil
-}
-
-// // GetUsers returns all the users in the system
-// func GetUsers() ([]User, error) {
-// 	var users = getMockUsers()
-// 	return users, nil
-// }
-
-// // UpdateUserByID ...
-// func UpdateUserByID(id pk.ID, profile Profile) (User, error) {
-// 	var user User
-
-// 	err := updateMockUserByID(id, profile)
-// 	if err != nil {
-// 		return user, err
-// 	}
-
-// 	return GetUserByID(id)
-// }
-
-var mockUsers = map[pk.ID]User{
-	1: User{
-		ID:              1,
-		DatetimeCreated: time.Now(),
-		DatetimeUpdated: time.Now(),
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "John",
-				Gender:    GenderMale,
-			},
-			LastName: "Doe",
-			Email:    "john.doe@email.com",
-		},
-	},
-	2: User{
-		ID:              2,
-		DatetimeCreated: time.Now(),
-		DatetimeUpdated: time.Now(),
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "Jane",
-				Gender:    GenderFemale,
-			},
-			LastName: "Doe",
-			Email:    "jane.doe@email.com",
-		},
-	},
-	3: User{
-		ID:              3,
-		DatetimeCreated: time.Now(),
-		DatetimeUpdated: time.Now(),
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "Jack",
-				Gender:    GenderOther,
-			},
-			LastName: "Does",
-			Email:    "jack.does@email.com",
-		},
-	},
-}
-
-func getMockUserByID(id pk.ID) (User, error) {
-	var user User
-	var exists bool
-	user, exists = mockUsers[id]
-	if !exists {
-		return user, ErrEntityDoesNotExist
-	}
-	return user, nil
-}
-
-func getMockUsers() []User {
-	var users []User
-	for _, usr := range mockUsers {
-		users = append(users, usr)
-	}
-	return users
-
-}
-
-func updateMockUserByID(id pk.ID, profile Profile) error {
-	user, exists := mockUsers[id]
-	if !exists {
-		return ErrEntityDoesNotExist
-	}
-
-	err := (&user).UpdateProfile(profile)
-	if err != nil {
-		return err
-	}
-
-	mockUsers[id] = user
 
 	return nil
 }

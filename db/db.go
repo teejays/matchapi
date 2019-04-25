@@ -7,58 +7,73 @@ import (
 	"github.com/teejays/matchapi/lib/pk"
 )
 
-var documentRoot = ".data"
+var documentRoot = ".mockdata"
 var client *gofiledb.Client
+var isInitialized bool
 
 var UserCollection string = "user"
 var LikeCollection string = "like"
 
 // InitDB initializes the database connection
 func InitDB() error {
+	var err error
+	client, err = initClient(documentRoot)
+	return err
+}
 
+func initClient(dir string) (*gofiledb.Client, error) {
 	// Initialize the database
 	o := gofiledb.ClientInitOptions{
-		DocumentRoot:          documentRoot,
+		DocumentRoot:          dir,
 		OverwritePreviousData: false,
 	}
 	err := gofiledb.Initialize(o)
 	if err != nil {
-		return fmt.Errorf("could not initialize the gofiledb client: %v", err)
+		return nil, fmt.Errorf("could not initialize the gofiledb client: %v", err)
 	}
 
 	// Get the initialized client
-	client = gofiledb.GetClient()
+	cl := gofiledb.GetClient()
 
 	// Create the user collections
-	err = client.AddCollection(gofiledb.CollectionProps{Name: UserCollection, EncodingType: gofiledb.ENCODING_JSON})
+	err = cl.AddCollection(gofiledb.CollectionProps{Name: UserCollection, EncodingType: gofiledb.ENCODING_JSON})
 	if err != nil {
-		return fmt.Errorf("could not create the gofiledb '%s' collection: %v", UserCollection, err)
+		return nil, fmt.Errorf("could not create the gofiledb '%s' collection: %v", UserCollection, err)
 	}
 
 	// Create the like collections
-	err = client.AddCollection(gofiledb.CollectionProps{Name: LikeCollection, EncodingType: gofiledb.ENCODING_JSON})
+	err = cl.AddCollection(gofiledb.CollectionProps{Name: LikeCollection, EncodingType: gofiledb.ENCODING_JSON})
 	if err != nil {
-		return fmt.Errorf("could not create the gofiledb '%s' collection: %v", LikeCollection, err)
+		return nil, fmt.Errorf("could not create the gofiledb '%s' collection: %v", LikeCollection, err)
 	}
 
 	// Add an index on ReceiverID and GiverID for like
-	err = client.AddIndex(LikeCollection, "GiverID")
+	err = cl.AddIndex(LikeCollection, "GiverID")
 	if err != nil {
-		return fmt.Errorf("could not create the index 'GiverID' on '%s' collection: %v", LikeCollection, err)
+		return nil, fmt.Errorf("could not create the index 'GiverID' on '%s' collection: %v", LikeCollection, err)
 	}
-	err = client.AddIndex(LikeCollection, "ReceiverID")
+	err = cl.AddIndex(LikeCollection, "ReceiverID")
 	if err != nil {
-		return fmt.Errorf("could not create the index 'ReceiverID' on '%s' collection: %v", LikeCollection, err)
+		return nil, fmt.Errorf("could not create the index 'ReceiverID' on '%s' collection: %v", LikeCollection, err)
 	}
 
-	return nil
+	return cl, nil
 }
 
 // GetClient provided the client object that can be used to interact with the database
 func GetClient() *gofiledb.Client {
+	// if the DB has not been initialized, we should probably do it.
+	// if !isInitialized {
+	// 	err := InitDB()
+	// 	if err != nil {
+	// 		panic(fmt.Sprintf("There was an error while trying to initialize the DB client: %v", err))
+	// 	}
+	// }
+
 	if client == nil {
-		panic("db.client fetched before it is initialized")
+		panic("db.client is initialized but detected as nil")
 	}
+
 	return client
 }
 
