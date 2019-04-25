@@ -8,8 +8,54 @@ import (
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/rest"
+	"github.com/teejays/matchapi/lib/rest"
 )
+
+// HandleGetUser ...
+// Example Request: curl -v localhost:8080/{userid}/v1/user
+func HandleGetUser(w http.ResponseWriter, r *http.Request) {
+
+	// Get the userID from the request
+	userID, err := rest.Authenticate(r)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
+		return
+	}
+
+	// convert the id to the user.UserID type alias
+
+	clog.Debugf("userID: %d", userID)
+
+	// Get the incoming likes for the user
+	user, err := GetUserByID(userID)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
+		return
+	}
+
+	clog.Debugf("UserID fetched: %v", user)
+
+	// Json marshal the response
+	resp, err := json.Marshal(user)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
+		return
+	}
+
+	// Write the HTTP response
+	_, err = w.Write(resp)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
+		return
+	}
+
+	clog.Info("Request succesfully processed")
+
+}
 
 // HandleUpdateUserProfile ...
 // Example Request: curl -v -X "POST" localhost:8080/{userid}/v1/user -d '{"FirstName":"Jon","LastName":"Smith", "Email": "jon.smith@email.com", "Gender": 0}'
@@ -18,7 +64,7 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	clog.Infof("Request received for %s", "HandleUpdateUserProfile")
 
 	// Get the userID from the request
-	id, err := rest.Authenticate(r)
+	userID, err := rest.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -26,7 +72,6 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// convert the id to the user.UserID type alias
-	userID := UserID(id)
 
 	clog.Debugf("userID: %d", userID)
 
@@ -75,55 +120,6 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
-	}
-
-	clog.Info("Request succesfully processed")
-
-}
-
-// HandleGetUser ...
-// Example Request: curl -v localhost:8080/{userid}/v1/user
-func HandleGetUser(w http.ResponseWriter, r *http.Request) {
-
-	clog.Infof("Request received for %s", "HandleGetUser")
-
-	// Get the userID from the request
-	id, err := rest.Authenticate(r)
-	if err != nil {
-		clog.Error(err.Error())
-		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
-		return
-	}
-
-	// convert the id to the user.UserID type alias
-	userID := UserID(id)
-
-	clog.Debugf("userID: %d", userID)
-
-	// Get the incoming likes for the user
-	user, err := GetUserByID(userID)
-	if err != nil {
-		clog.Error(err.Error())
-		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
-		return
-	}
-
-	clog.Debugf("UserID fetched: %v", user)
-
-	// Json marshal the response
-	resp, err := json.Marshal(user)
-	if err != nil {
-		clog.Error(err.Error())
-		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
-		return
-	}
-
-	// Write the HTTP response
-	_, err = w.Write(resp)
-	if err != nil {
-		clog.Error(err.Error())
-		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
-		return
 	}
 
 	clog.Info("Request succesfully processed")

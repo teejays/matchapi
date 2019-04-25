@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/teejays/matchapi/lib/pk"
 )
 
-// UserID is a type alias to allow more control over the underlying data type of the UserID field
-type UserID int
+// ShareableProfile is a part of the profile that can be shared with other users
+type ShareableProfile struct {
+	FirstName string
+	Gender    int
+	Images    []string
+}
 
 // Profile represents the editable part of the User
 type Profile struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Gender    int
+	ShareableProfile
+	LastName string
+	Email    string
 }
 
 // Validate validates a profile before saving
@@ -48,7 +53,7 @@ func (p Profile) Validate() error {
 
 // User represents the primary user object of the app
 type User struct {
-	ID              UserID
+	ID              pk.ID
 	DatetimeCreated time.Time
 	DatetimeUpdated time.Time
 	IsDeleted       bool
@@ -81,13 +86,13 @@ func GetUsers() ([]User, error) {
 }
 
 // GetUserByID returns the user object corresponding to the provided userID
-func GetUserByID(id UserID) (User, error) {
+func GetUserByID(id pk.ID) (User, error) {
 	user, err := getMockUserByID(id)
 	return user, err
 }
 
 // UpdateUserByID ...
-func UpdateUserByID(id UserID, profile Profile) (User, error) {
+func UpdateUserByID(id pk.ID, profile Profile) (User, error) {
 	var user User
 
 	err := updateMockUserByID(id, profile)
@@ -98,16 +103,18 @@ func UpdateUserByID(id UserID, profile Profile) (User, error) {
 	return GetUserByID(id)
 }
 
-var mockUsers = map[UserID]User{
+var mockUsers = map[pk.ID]User{
 	1: User{
 		ID:              1,
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
 		Profile: Profile{
-			FirstName: "John",
-			LastName:  "Doe",
-			Email:     "john.doe@email.com",
-			Gender:    GenderMale,
+			ShareableProfile: ShareableProfile{
+				FirstName: "John",
+				Gender:    GenderMale,
+			},
+			LastName: "Doe",
+			Email:    "john.doe@email.com",
 		},
 	},
 	2: User{
@@ -115,10 +122,12 @@ var mockUsers = map[UserID]User{
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
 		Profile: Profile{
-			FirstName: "Jane",
-			LastName:  "Doe",
-			Email:     "jane.doe@email.com",
-			Gender:    GenderFemale,
+			ShareableProfile: ShareableProfile{
+				FirstName: "Jane",
+				Gender:    GenderFemale,
+			},
+			LastName: "Doe",
+			Email:    "jane.doe@email.com",
 		},
 	},
 	3: User{
@@ -126,15 +135,17 @@ var mockUsers = map[UserID]User{
 		DatetimeCreated: time.Now(),
 		DatetimeUpdated: time.Now(),
 		Profile: Profile{
-			FirstName: "Jack",
-			LastName:  "Does",
-			Email:     "jack.does@email.com",
-			Gender:    GenderOther,
+			ShareableProfile: ShareableProfile{
+				FirstName: "Jack",
+				Gender:    GenderOther,
+			},
+			LastName: "Does",
+			Email:    "jack.does@email.com",
 		},
 	},
 }
 
-func getMockUserByID(id UserID) (User, error) {
+func getMockUserByID(id pk.ID) (User, error) {
 	var user User
 	var exists bool
 	user, exists = mockUsers[id]
@@ -153,7 +164,7 @@ func getMockUsers() []User {
 
 }
 
-func updateMockUserByID(id UserID, profile Profile) error {
+func updateMockUserByID(id pk.ID, profile Profile) error {
 	user, exists := mockUsers[id]
 	if !exists {
 		return ErrEntityDoesNotExist

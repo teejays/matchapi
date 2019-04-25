@@ -6,6 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/teejays/clog"
+
+	"github.com/teejays/matchapi/lib/pk"
 )
 
 // CleanAPIErrMessage is the message that should be used in at API response when we want to mask the
@@ -15,12 +18,12 @@ var CleanAPIErrMessage = "There was an error processing the request. Please see 
 // Authenticate should implement the authentication logic. It should should at the auth token
 // and figure out what user context. Currently, this is not implemented and it only relies on
 // and explicitly passed userID in the route.
-func Authenticate(r *http.Request) (int, error) {
+func Authenticate(r *http.Request) (pk.ID, error) {
 	return GetUserIDMuxVar(r)
 }
 
 // GetUserIDMuxVar extracts the userid param out of the request route
-func GetUserIDMuxVar(r *http.Request) (int, error) {
+func GetUserIDMuxVar(r *http.Request) (pk.ID, error) {
 
 	var vars = mux.Vars(r)
 
@@ -34,5 +37,15 @@ func GetUserIDMuxVar(r *http.Request) (int, error) {
 		return -1, fmt.Errorf("could not convert userID to a number: %v", err)
 	}
 
-	return id, nil
+	return pk.ID(id), nil
+}
+
+// LoggerMiddleware is a http.Handler middleware function that logs any request received
+func LoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Log the request
+		clog.Debugf("Server: HTTP request received for %s", r.URL.Path)
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
 }
