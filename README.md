@@ -1,24 +1,20 @@
 # Match API
 
-This is a simple exercise to create a sample matchmaking app API. The API server is all written in Golang. It makes use of [`gorrila/mux`](https://github.com/gorilla/mux) for HTTP multiplexing and [`teejays/gofildb`](https://github.com/teejays/gofiledb) (more on this below) for a persistant database.
+This is a simple exercise to create a sample matchmaking app API. The API server is written in Golang. It makes use of [`gorrila/mux`](https://github.com/gorilla/mux) for HTTP multiplexing and [`teejays/gofildb`](https://github.com/teejays/gofiledb) (more on this below) for a persistent database.
 
 ## Installation
 
-The project has been designed to be setup on a dev environment with relatively ease.
+The project has been designed to be setup on a development environment with ease.
 
 ### Prerequisites
 
-In order to use start and test the server locally, you will need a few things installed:
-1. Golang: Install from the official website [here](https://golang.org).
-2. I think that's it, can't think of anything else.
+In order to start and test the server locally, you will need a few things installed:
+1. Golang: Install from the official website [here](https://golang.org). Make sure that you can run `go` from the command line.
 
-### Installation
+### Starting the server
 The API can be setup using the following commands:
 1. Build the binary; `make build`
 2. Start the server: `make run`
-
-### Testing
-You can run the unit and integration tests using: `make test`
 
 ## Documentation
 
@@ -43,6 +39,9 @@ Like resource represents the action of a user liking another user. It is impleme
 - **GET** `/<auth_user_id>/v2/like/incoming`: provides all the likes that the authenticated user has received. The data is much richer and field names are more better as compared to V1. This version of the APi also includes some basic user info so the client doesn't have to make subsequent calls to the API for user details. Sample request: `curl localhost:8080/<user_id>/v2/like/incoming`
 
 - **POST** `/<auth_user_id>/v2/like`: represents a new _like_ action. This functionality was not included in previous version of the like API. Sample request: `curl -X "POST" localhost:8080/{userid}/v2/like -d '{"ReceiverID": 3}'`
+
+### Testing
+Testing has been implemented at both the unit and integration level using table tests. All tests have been written using Go's standard `testing` package. HTTP handler tests have been implemented using the `net/http/httptest` package. You can run the tests using: `make test`
 
 ### Tech Stack
 
