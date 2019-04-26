@@ -71,3 +71,4 @@ This is a minimalistic API, developed mostly for fun and experimentation reasons
 - [ ] Write tests for `service/like/v1`, `service/like/v1`, `handler/v1/like`, and `handler/v2/like`.
 - [ ] Create an endpoint to get another user
 - [ ] Create endpoint to get a _Match_ (when both users like eachother)
+- [ ] Add authentication using JWT
