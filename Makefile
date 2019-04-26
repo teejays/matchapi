@@ -20,6 +20,8 @@ run: build
 run-verbose: build
 	./$(BIN_PATH)/$(BIN_NAME) --port 8080 --verbose
 
+test:
+	go test -v ./...
 clean:
 	rm -r $(BIN_PATH)/*
 	rm -r $(DB_PATH)

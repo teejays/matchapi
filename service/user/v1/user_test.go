@@ -2,7 +2,6 @@ package user
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/teejays/clog"
@@ -12,7 +11,7 @@ import (
 )
 
 func init() {
-	clog.LogLevel = 0
+	clog.LogLevel = 7
 }
 
 func TestValidate(t *testing.T) {

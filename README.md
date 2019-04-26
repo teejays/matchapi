@@ -44,7 +44,7 @@ Like resource represents the action of a user liking another user. It is impleme
 - **POST** `/<auth_user_id>/v2/like`: represents a new _like_ action. This functionality was not included in previous version of the like API. Sample request: `curl -X "POST" localhost:8080/{userid}/v2/like -d '{"ReceiverID": 3}'`
 
 ### Testing
-Testing has been implemented at both the unit and integration level using table tests. All tests have been written using Go's standard `testing` package. HTTP handler tests have been implemented using the `net/http/httptest` package. You can run the tests using: `make test`
+Testing has been implemented at both the unit and integration level for User entities. Because of a lack of time, Like entity is not covered by tests unfortunately. All tests have been written using Go's standard `testing` package. HTTP handler tests have been implemented using the `net/http/httptest` package. You can run the tests using: `make test`
 
 ### Tech Stack
 
