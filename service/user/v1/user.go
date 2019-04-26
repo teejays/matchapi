@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/teejays/clog"
+
 	"github.com/teejays/matchapi/db"
 	"github.com/teejays/matchapi/lib/pk"
 )
@@ -67,6 +69,7 @@ func NewUser(profile Profile) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	clog.Debugf("User | NewUser(): new ID generates: %d", id)
 
 	// Fetch the new entity from DB and return it
 	var user User

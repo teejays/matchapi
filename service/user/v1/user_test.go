@@ -15,17 +15,6 @@ func init() {
 	clog.LogLevel = 0
 }
 
-func helperPopulateMockData() error {
-	clog.Debugf("Populating the mock users data")
-	for id, u := range mockUsers {
-		err := db.SaveEntityByID(db.UserCollection, id, u)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func TestValidate(t *testing.T) {
 
 	// Define the table tests
@@ -148,7 +137,7 @@ func TestGetUserByID(t *testing.T) {
 	defer db.DestoryMockClient()
 
 	// Populate some data
-	err = helperPopulateMockData()
+	err = HelperPopulateMockData()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,7 +158,7 @@ func TestGetUserByID(t *testing.T) {
 		{
 			name:      "fecthing an existing profile should return the right profile",
 			id:        1,
-			user:      mockUsers[1],
+			user:      MockUsers[1],
 			shouldErr: false,
 		},
 	}
@@ -197,7 +186,7 @@ func TestUpdateProfile(t *testing.T) {
 	defer db.DestoryMockClient()
 
 	// Populate some data
-	err = helperPopulateMockData()
+	err = HelperPopulateMockData()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +214,7 @@ func TestUpdateProfile(t *testing.T) {
 		{
 			name:       "updating to a valid profile should be okay",
 			id:         1,
-			newProfile: mockUsers[2].Profile,
+			newProfile: MockUsers[2].Profile,
 			shouldErr:  false,
 		},
 	}
@@ -253,52 +242,4 @@ func TestUpdateProfile(t *testing.T) {
 			}
 		})
 	}
-}
-
-var mockUsers = map[pk.ID]*User{
-	1: &User{
-		ID: 1,
-		meta: meta{
-			DatetimeCreated: time.Now(),
-			DatetimeUpdated: time.Now(),
-		},
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "John",
-				Gender:    GenderMale,
-			},
-			LastName: "Doe",
-			Email:    "john.doe@email.com",
-		},
-	},
-	2: &User{
-		ID: 2,
-		meta: meta{
-			DatetimeCreated: time.Now(),
-			DatetimeUpdated: time.Now(),
-		},
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "Jane",
-				Gender:    GenderFemale,
-			},
-			LastName: "Doe",
-			Email:    "jane.doe@email.com",
-		},
-	},
-	3: &User{
-		ID: 3,
-		meta: meta{
-			DatetimeCreated: time.Now(),
-			DatetimeUpdated: time.Now(),
-		},
-		Profile: Profile{
-			ShareableProfile: ShareableProfile{
-				FirstName: "Jack",
-				Gender:    GenderOther,
-			},
-			LastName: "Does",
-			Email:    "jack.does@email.com",
-		},
-	},
 }

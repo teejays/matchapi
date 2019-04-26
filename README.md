@@ -13,19 +13,22 @@ In order to start and test the server locally, you will need a few things instal
 
 ### Starting the server
 The API can be setup using the following commands:
-1. Build the binary; `make build`
+1. Build the binary: `make build`
 2. Start the server: `make run`
 
 ## Documentation
 
 ### Entities & Endpoints
-There are two main entities in this server: _users_ and _likes_. The codebase,the two services and the API endpoints are structured around these.
+There are two main entities in this server: _users_ and _likes_. The codebase, services and the API endpoints are structured around them.
 
 #### **USER**
 
-A user object represents the basic user of the API. It is designed in a modular way so it can be broken down into editable and shareable parts. It is implemented in `service/user/v1`. It has the following API endpoints:
+A user object represents the basic user of the API. It is designed in a modular way so it can be broken down into editable and shareable parts. It is implemented in the package `github.com/teejays/matchapi/service/user/v1`. It has the following API endpoints:
 
-- **POST** `/v1/user`: creates a new user and returns the newly created user object including the randomly generated ID: `curl localhost:8080/v1/user -d '{"FirstName":"Jon","LastName":"Doe", "Email": "jon.doe@email.com", "Gender": 1}'`
+- **POST** `/v1/user`: creates a new user and returns the 
+newly created user object including the randomly generated ID: `curl localhost:8080/v1/user -d '{"FirstName":"Jon","LastName":"Doe", "Email": "jon.doe@email.com", "Gender": 1}'`
+
+- **PUT** `/v1/user`: update a user's profile and returns the newly updated profile. Sample request `curl -X "PUT" localhost:8080/<auth_user_id>/v1/user -d '{"FirstName":"Jack","LastName":"Dane", "Email": "jack.dane@email.com", "Gender": 3}'`
 
 - **GET** `/<auth_user_id>/v1/user`: provides user obejct of the authenticated user: `curl localhost:8080/<user_id>/v1/user`
 
@@ -63,3 +66,8 @@ _Scalability:_
 This is a minimalistic API, developed mostly for fun and experimentation reasons. In order to scale it further, a few decisions probably need to be changed. For example, the local file syetem based data storage should probably be replaced by a proper schemaless DB system.
 
 
+## TODO
+- [ ] Pass the right content-type headers with response
+- [ ] Write tests for `service/like/v1`, `service/like/v1`, `handler/v1/like`, and `handler/v2/like`.
+- [ ] Create an endpoint to get another user
+- [ ] Create endpoint to get a _Match_ (when both users like eachother)

@@ -3,7 +3,9 @@ package db
 import (
 	"fmt"
 
+	"github.com/teejays/clog"
 	"github.com/teejays/gofiledb"
+
 	"github.com/teejays/matchapi/lib/pk"
 )
 
@@ -62,13 +64,6 @@ func initClient(dir string) (*gofiledb.Client, error) {
 
 // GetClient provided the client object that can be used to interact with the database
 func GetClient() *gofiledb.Client {
-	// if the DB has not been initialized, we should probably do it.
-	// if !isInitialized {
-	// 	err := InitDB()
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("There was an error while trying to initialize the DB client: %v", err))
-	// 	}
-	// }
 
 	if client == nil {
 		panic("db.client is initialized but detected as nil")
@@ -108,6 +103,7 @@ func SaveNewEntity(collection string, entity interface{}) (pk.ID, error) {
 	lock(collection)
 	defer unlock(collection)
 
+	clog.Debugf("DB | SaveNewEntity: Saving new %s entity...", collection)
 	cl := GetClient()
 	id, err := cl.SaveNewEntity(collection, entity)
 
