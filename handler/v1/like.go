@@ -54,6 +54,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the HTTP response
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(resp)
 	if err != nil {
 		clog.Error(err.Error())

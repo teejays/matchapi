@@ -48,6 +48,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the HTTP response
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(resp)
 	if err != nil {
 		clog.Error(err.Error())
@@ -112,6 +113,7 @@ func HandlePostLike(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write the update profile to the http response
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(resp)
 	if err != nil {
 		clog.Error(err.Error())
