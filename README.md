@@ -56,7 +56,7 @@ I did not use any web framework for the project. The project folder structure an
 The authentication layer for this server hasn't been implemented yet. However, the API is built in a way that that Basic Auth could be incorporated easily without changing the structure of the code. This means that the API handlers have the ability figure out what user is making the request, without really affecting RESTful route patterns. This is done by passing in the `userID` of the 'authenticated' user as a prefix to the standard route e.g. `/v1/resource` becomes `/<userID>/v1/resouce`.
 
 
-#### GoLang
+#### Golang
 I decided to write this in Go for one main reason: I love Go. I picked up GoLang while at work about 3 years ago. Since then, I have fallen in love the opinionatedness of the language, the strictly typed nature. There is a Go way of doing things, and that's something I've started to admire.
 
 #### Database
