@@ -1,4 +1,4 @@
-package user
+package handler
 
 import (
 	"encoding/json"
@@ -8,7 +8,9 @@ import (
 
 	"github.com/teejays/clog"
 
+	"github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/rest"
+	"github.com/teejays/matchapi/service/user/v1"
 )
 
 // HandleGetUser ...
@@ -16,7 +18,7 @@ import (
 func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := Authenticate(r)
+	userID, err := auth.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -26,7 +28,7 @@ func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	clog.Debugf("userID: %d", userID)
 
 	// Get the incoming likes for the user
-	user, err := GetUserByID(userID)
+	user, err := user.GetUserByID(userID)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -68,7 +70,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Json unmarshal the request into the user.Profile
-	var profile Profile
+	var profile user.Profile
 	err = json.Unmarshal(body, &profile)
 	if err != nil {
 		clog.Error(err.Error())
@@ -85,7 +87,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the profile of the given user
-	user, err := NewUser(profile)
+	user, err := user.NewUser(profile)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -116,7 +118,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := Authenticate(r)
+	userID, err := auth.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -134,7 +136,7 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Json unmarshal the request into the user.Profile
-	var profile Profile
+	var profile user.Profile
 	err = json.Unmarshal(body, &profile)
 	if err != nil {
 		clog.Error(err.Error())
@@ -151,7 +153,7 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the user object
-	user, err := GetUserByID(userID)
+	user, err := user.GetUserByID(userID)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)

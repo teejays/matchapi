@@ -8,10 +8,9 @@ import (
 	"github.com/teejays/clog"
 
 	"github.com/teejays/matchapi/db"
+	"github.com/teejays/matchapi/handler/v1"
+	handlerV2 "github.com/teejays/matchapi/handler/v2"
 	"github.com/teejays/matchapi/lib/rest"
-	"github.com/teejays/matchapi/service/v1/like"
-	"github.com/teejays/matchapi/service/v1/user"
-	likeV2 "github.com/teejays/matchapi/service/v2/like"
 )
 
 const listenPort = 8080 // we should probably move this to a config file, env variable or command-line flag
@@ -19,52 +18,63 @@ const listenPort = 8080 // we should probably move this to a config file, env va
 func main() {
 	var err error
 
+	// Lower the log level
+	clog.LogLevel = 1
+
 	// Initialize the database
 	err = db.InitDB()
 	if err != nil {
 		clog.FatalErr(err)
 	}
 
-	// Start the webserver
-	err = startServer()
+	// Initialize the webserver
+	err = initServer()
 	if err != nil {
 		clog.FatalErr(err)
 	}
 }
 
-func startServer() error {
+func initServer() error {
+
+	// Register the routes and handler so we can start directing the
+	// requests to the right places
+	registerHandlers()
+
+	// Start the server
+	clog.Infof("Listenining on: %d", listenPort)
+	return http.ListenAndServe(fmt.Sprintf(":%d", listenPort), nil)
+}
+
+func registerHandlers() {
+
+	// Create a new gorilla.mux router
 	r := mux.NewRouter()
 
-	// Set up unauthenticated routes
-	v1 := r.PathPrefix("/v1").Subrouter()
-	v1.HandleFunc("/user", user.HandleCreateUser).
-		Methods(http.MethodPost)
+	// Unauthenticated Routes: We are going to goahead and deal with pseudo-authenticated
+	// routes but first, let's create routes that do no need any authentication
+	// - Unauthenticated V1:
+	rv1 := r.PathPrefix("/v1").Subrouter()
+	rv1.HandleFunc("/user", handler.HandleCreateUser).Methods(http.MethodPost)
 
-	// add user id as a route variable to the path, as a proxy for auth (for now)
+	// Authenticated Routes: Create a route path that takes userid as the first param
+	// We are going to use it as a prxoy for authentication
 	a := r.PathPrefix("/{userid}").Subrouter()
 
-	// Setup V1 routes
-	v1 = a.PathPrefix("/v1").Subrouter()
+	// - Authenticated V1; Create a path that takes v1 as prefix
+	av1 := a.PathPrefix("/v1").Subrouter()
+	av1.HandleFunc("/user", handler.HandleGetUser).Methods(http.MethodGet)
+	av1.HandleFunc("/user", handler.HandleUpdateUserProfile).Methods(http.MethodPut)
+	av1.HandleFunc("/like/incoming", handler.HandleGetIncomingLikes).Methods("GET")
 
-	// - V1 User Endpoints
-	v1.HandleFunc("/user", user.HandleGetUser).
-		Methods(http.MethodGet)
-	v1.HandleFunc("/user", user.HandleUpdateUserProfile).
-		Methods(http.MethodPut)
+	// - Authenticated V2; Create a path that takes v2 as prefix
+	av2 := a.PathPrefix("/v2").Subrouter()
+	av2.HandleFunc("/like/incoming", handlerV2.HandleGetIncomingLikes).Methods("GET")
+	av2.HandleFunc("/like", handlerV2.HandlePostLike).Methods("POST")
 
-	v1.HandleFunc("/like/incoming", like.HandleGetIncomingLikes).
-		Methods("GET")
-
-	// Setup V1 routes
-	v2 := a.PathPrefix("/v2").Subrouter()
-	v2.HandleFunc("/like/incoming", likeV2.HandleGetIncomingLikes).
-		Methods("GET")
-	v2.HandleFunc("/like", likeV2.HandlePostLike).
-		Methods("POST")
-
-	// Register the handler
+	// Add a simple middleware function so we can log the requests
 	r.Use(rest.LoggerMiddleware)
+
+	// Register the router as the handler in the standard net/http package
 	http.Handle("/", r)
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", listenPort), nil)
 }

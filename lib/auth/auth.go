@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/teejays/matchapi/lib/pk"
 	"github.com/teejays/matchapi/lib/rest"
+	"github.com/teejays/matchapi/service/user/v1"
 )
 
 // Authenticate should implement the authentication logic. It should should at the auth token
@@ -22,7 +23,7 @@ func Authenticate(r *http.Request) (pk.ID, error) {
 	}
 
 	// Validate that the user exists
-	user, err := GetUserByID(id)
+	user, err := user.GetUserByID(id)
 	if err != nil {
 		clog.Errorf("%v", err)
 		return id, fmt.Errorf("error while fetching the authorization user")

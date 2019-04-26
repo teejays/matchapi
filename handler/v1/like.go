@@ -1,4 +1,4 @@
-package like
+package handler
 
 import (
 	"encoding/json"
@@ -6,8 +6,10 @@ import (
 
 	"github.com/teejays/clog"
 
+	"github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/rest"
-	"github.com/teejays/matchapi/service/v1/user"
+	"github.com/teejays/matchapi/service/like/v1"
+	likeV2 "github.com/teejays/matchapi/service/like/v2"
 )
 
 // HandleGetIncomingLikes ...
@@ -15,10 +17,10 @@ import (
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := user.Authenticate(r)
+	userID, err := auth.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
+		http.Error(w, "Could not authenticate the auth", http.StatusUnauthorized)
 		return
 	}
 
@@ -27,11 +29,18 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	clog.Debugf("userID: %d", userID)
 
 	// Get the incoming likes for the user
-	likes, err := GetIncomingLikesByUserID(userID)
+	likesV2, err := likeV2.GetIncomingLikesByUserID(userID)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
+	}
+
+	// To make the API compatible
+	var likes []like.Like
+	for _, lv2 := range likesV2 {
+		l := like.ConvertV2IncomimgLikeToV1(lv2)
+		likes = append(likes, l)
 	}
 
 	clog.Debugf("userID Incoming Likes: %v", likes)

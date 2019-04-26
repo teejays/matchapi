@@ -1,4 +1,4 @@
-package like
+package handler
 
 import (
 	"encoding/json"
@@ -8,16 +8,17 @@ import (
 
 	"github.com/teejays/clog"
 
+	"github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/rest"
-	"github.com/teejays/matchapi/service/v1/user"
+	"github.com/teejays/matchapi/service/like/v2"
 )
 
 // HandleGetIncomingLikes ...
-// Example Request: curl -v localhost:8080/{userid}/v1/like/incoming
+// Example Request: curl -v localhost:8080/{userid}/v2/like/incoming
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := user.Authenticate(r)
+	userID, err := auth.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -29,7 +30,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 	clog.Debugf("userID: %d", userID)
 
 	// Get the incoming likes for the user
-	likes, err := GetIncomingLikesByUserID(userID)
+	likes, err := like.GetIncomingLikesByUserID(userID)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -63,7 +64,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 func HandlePostLike(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := user.Authenticate(r)
+	userID, err := auth.Authenticate(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -79,7 +80,7 @@ func HandlePostLike(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Json unmarshal the request into the BasicLike struct
-	var blike BasicLike
+	var blike like.BasicLike
 	err = json.Unmarshal(body, &blike)
 	if err != nil {
 		clog.Error(err.Error())
@@ -88,14 +89,14 @@ func HandlePostLike(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate that the profile is has all required info
-	if err := blike.validate(); err != nil {
+	if err := blike.Validate(); err != nil {
 		clog.Error(err.Error())
 		http.Error(w, fmt.Sprintf("There was an error validating the request: %v", err), http.StatusBadRequest)
 		return
 	}
 
 	// Update the profile of the given user
-	like, err := NewLike(userID, blike)
+	like, err := like.NewLike(userID, blike)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)

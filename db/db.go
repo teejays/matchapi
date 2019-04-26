@@ -7,7 +7,7 @@ import (
 	"github.com/teejays/matchapi/lib/pk"
 )
 
-var documentRoot = ".mockdata"
+var documentRoot = ".data"
 var client *gofiledb.Client
 var isInitialized bool
 
