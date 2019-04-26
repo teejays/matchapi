@@ -58,7 +58,7 @@ func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleCreateUser ...
-// Example Request: curl -v -X "POST" localhost:8080//v1/user -d '{"FirstName":"Tom","LastName":"Harry", "Email": "tom.harry@email.com", "Gender": 3}'
+// Example Request: curl -X "POST" localhost:8080/v1/user -d '{"FirstName":"Tom","LastName":"Harry", "Email": "tom.harry@email.com", "Gender": 3}'
 func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Read the HTTP request body

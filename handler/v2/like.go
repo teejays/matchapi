@@ -60,7 +60,7 @@ func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandlePostLike ...
-// Example Request: curl -v -X "POST" localhost:8080/{userid}/v1/like -d '{"ReceiverID": 3}'
+// Example Request: curl -v -X "POST" localhost:8080/{userid}/v2/like -d '{"ReceiverID": 3}'
 func HandlePostLike(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request

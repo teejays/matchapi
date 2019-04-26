@@ -2,5 +2,8 @@
 .DS_Store
 */.DS_Store
 .data
+.data/*
 .data_mock
 */.data_mock
+bin
+bin/*

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -13,50 +14,66 @@ import (
 	"github.com/teejays/matchapi/lib/rest"
 )
 
-const listenPort = 8080 // we should probably move this to a config file, env variable or command-line flag
+// listenPort is the port at which the server will listen. It can be
+// passed as a command line flag using `--port <port>`. It defaults to 8080.
+var listenPort = flag.Int("port", 8080, "port at which the server should listen")
+
+// verbose mode can be turned on through the command line flag by passing `--verbose`.
+// Turning it on increases the log level of the logging library we're using
+var verbose = flag.Bool("verbose", false, "verbose mode")
 
 func main() {
 	var err error
 
-	// Lower the log level
-	clog.LogLevel = 1
+	// Initialize the flags so we can start using them in our logic
+	flag.Parse()
 
-	// Initialize the database
+	// If verbose mode is off, we should lower the log level
+	// The log level is by default set to the noisiest in teejays/clog
+	if !*verbose {
+		clog.LogLevel = 1
+	}
+
+	// Initialize the database: Consult the README for more details
 	err = db.InitDB()
 	if err != nil {
 		clog.FatalErr(err)
 	}
 
-	// Initialize the webserver
-	err = initServer()
+	// Initialize & start the webserver
+	err = initServer(*listenPort)
 	if err != nil {
 		clog.FatalErr(err)
 	}
 }
 
-func initServer() error {
+// initServer setups and star the webserver
+func initServer(port int) error {
 
 	// Register the routes and handler so we can start directing the
 	// requests to the right places
 	registerHandlers()
 
 	// Start the server
-	clog.Infof("Listenining on: %d", listenPort)
-	return http.ListenAndServe(fmt.Sprintf(":%d", listenPort), nil)
+	clog.Infof("Listenining on: %d", port)
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
 
+// registerHandlers setups the routes and middleware for the webserver
 func registerHandlers() {
 
 	// Create a new gorilla.mux router
 	r := mux.NewRouter()
 
-	// Unauthenticated Routes: We are going to goahead and deal with pseudo-authenticated
+	// Set up the routes
+
+	// 1. Unauthenticated Routes: We are going to goahead and deal with pseudo-authenticated
 	// routes but first, let's create routes that do no need any authentication
 	// - Unauthenticated V1:
 	rv1 := r.PathPrefix("/v1").Subrouter()
 	rv1.HandleFunc("/user", handler.HandleCreateUser).Methods(http.MethodPost)
 
-	// Authenticated Routes: Create a route path that takes userid as the first param
+	// 2. Authenticated Routes: Create a route path that takes userid as the first param
 	// We are going to use it as a prxoy for authentication
 	a := r.PathPrefix("/{userid}").Subrouter()
 
