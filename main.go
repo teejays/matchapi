@@ -64,7 +64,11 @@ func registerHandlers() {
 
 	// Create a new gorilla.mux router
 	r := mux.NewRouter()
-
+	
+	// Add a simple middleware function so we can log the requests
+	r.Use(rest.LoggerMiddleware)
+	r.Use(rest.AddContextMiddleware)
+	
 	// Set up the routes
 
 	// 1. Unauthenticated Routes: We are going to goahead and deal with pseudo-authenticated
@@ -72,10 +76,11 @@ func registerHandlers() {
 	// - Unauthenticated V1:
 	rv1 := r.PathPrefix("/v1").Subrouter()
 	rv1.HandleFunc("/user", handler.HandleCreateUser).Methods(http.MethodPost)
+	rv1.HandleFunc("/login", handler.HandleLogin).Methods(http.MethodPost)
 
-	// 2. Authenticated Routes: Create a route path that takes userid as the first param
-	// We are going to use it as a prxoy for authentication
-	a := r.PathPrefix("/{userid}").Subrouter()
+	// 2. Authenticated Routes: These routes will run a middleware authentication function
+	a := r
+	a.Use(rest.AuthenticateMiddleware)
 
 	// - Authenticated V1; Create a path that takes v1 as prefix
 	av1 := a.PathPrefix("/v1").Subrouter()
@@ -87,9 +92,6 @@ func registerHandlers() {
 	av2 := a.PathPrefix("/v2").Subrouter()
 	av2.HandleFunc("/like/incoming", handlerV2.HandleGetIncomingLikes).Methods("GET")
 	av2.HandleFunc("/like", handlerV2.HandlePostLike).Methods("POST")
-
-	// Add a simple middleware function so we can log the requests
-	r.Use(rest.LoggerMiddleware)
 
 	// Register the router as the handler in the standard net/http package
 	http.Handle("/", r)

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"context"
 
 	"github.com/gorilla/mux"
 	"github.com/teejays/clog"
 
+	"github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/pk"
 )
 
@@ -31,6 +33,29 @@ func GetUserIDMuxVar(r *http.Request) (pk.ID, error) {
 	}
 
 	return pk.ID(id), nil
+}
+
+// AddContextMiddleware is a http.Handler middleware function that logs any request received
+func AddContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Call the next handler, with request.WithContext()
+		next.ServeHTTP(w, r.WithContext(context.Background()))
+	})
+}
+
+// AuthenticateMiddleware authenticates the requests
+func AuthenticateMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the Authenticated Request
+		ar, err := auth.AuthenticateRequest(r)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, ar)
+	})
 }
 
 // LoggerMiddleware is a http.Handler middleware function that logs any request received

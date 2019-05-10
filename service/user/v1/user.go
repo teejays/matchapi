@@ -24,8 +24,9 @@ var ErrEntityDoesNotExist = errors.New("the requested entity does not exist")
 
 // User represents the primary user object of the app
 type User struct {
-	ID        pk.ID
-	IsDeleted bool
+	ID           pk.ID
+	PasswordHash string
+	IsDeleted    bool
 	Profile
 	meta
 }
@@ -50,17 +51,25 @@ type ShareableProfile struct {
 	Images    []string
 }
 
+// NewUserRequest represents that request object that is used when
+// a new user is created
+type NewUserRequest struct {
+	Profile
+	PasswordHash string
+}
+
 // NewUser creates a new instance of a user object and stores it in the database
-func NewUser(profile Profile) (*User, error) {
+func NewUser(req NewUserRequest) (*User, error) {
 
 	// Validate that user data is okay
-	if err := profile.Validate(); err != nil {
+	if err := req.Profile.Validate(); err != nil {
 		return nil, err
 	}
 
 	// Create a new user object and populate it with data
 	var u User
-	u.Profile = profile
+	u.Profile = req.Profile
+	u.PasswordHash = req.PasswordHash
 	u.DatetimeCreated = time.Now()
 	u.DatetimeUpdated = time.Now()
 
@@ -90,6 +99,46 @@ func GetUserByID(id pk.ID) (*User, error) {
 	}
 
 	return &user, err
+}
+
+type UserCred struct {
+	ID 			pk.ID
+	Email        string
+	PasswordHash string
+}
+
+func GetUserCredsByEmail(email string) ([]UserCred, error) {
+	// Run the query to all the users
+	results, err := db.Query(db.UserCollection, fmt.Sprintf("Email:%s", email))
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the creds and return
+	var creds []UserCred
+	for _, _v := range results {
+		v, ok := _v.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("error fetching users by email: one of the response is not a map[string]interface{}")
+		}
+		var c UserCred
+		id, ok := v["ID"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("error fetching users by email: one of the response ID is not a number")
+		}
+		c.ID = pk.ID(id)
+		c.Email, ok = v["Email"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error fetching users by email: one of the response emails is not a string")
+		}
+		c.PasswordHash, ok = v["PasswordHash"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error fetching users by email: one of the response password has is not a string")
+		}
+		creds = append(creds, c)
+	}
+
+	return creds, nil
 }
 
 // UpdateProfile ...

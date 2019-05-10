@@ -18,7 +18,7 @@ import (
 func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := auth.Authenticate(r)
+	userID, err := auth.GetUserIdFromRequest(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -58,6 +58,12 @@ func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// CreateUserRequest represents that request object that is used when
+// a new user is created
+type CreateUserRequest struct {
+	user.Profile
+	Password string
+}
 // HandleCreateUser ...
 // Example Request: curl -X "POST" localhost:8080/v1/user -d '{"FirstName":"Tom","LastName":"Harry", "Email": "tom.harry@email.com", "Gender": 3}'
 func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -71,24 +77,44 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Json unmarshal the request into the user.Profile
-	var profile user.Profile
-	err = json.Unmarshal(body, &profile)
+	var req CreateUserRequest
+	err = json.Unmarshal(body, &req)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "There was an error json unmarshaling the request", http.StatusBadRequest)
 		return
 	}
-
+	
 	// Validate that the profile is has all required info
-	err = profile.Validate()
+	err = req.Profile.Validate()
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, fmt.Sprintf("There was an error validating the request: %v", err), http.StatusBadRequest)
 		return
 	}
 
+	// Get the password hash after validating it
+	err = auth.IsStrongPassword(req.Password)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, fmt.Sprintf("The password is not strong enough: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	passwordHash, err := auth.GetHash(req.Password)
+	if err != nil {
+		clog.Error(err.Error())
+		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
+		return
+	}
+
+	newUserReq := user.NewUserRequest{
+		Profile : req.Profile,
+		PasswordHash : passwordHash,
+	}
+
 	// Update the profile of the given user
-	user, err := user.NewUser(profile)
+	user, err := user.NewUser(newUserReq)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -120,7 +146,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := auth.Authenticate(r)
+	userID, err := auth.GetUserIdFromRequest(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)

@@ -17,7 +17,7 @@ import (
 func HandleGetIncomingLikes(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := auth.Authenticate(r)
+	userID, err := auth.GetUserIdFromRequest(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the auth", http.StatusUnauthorized)
