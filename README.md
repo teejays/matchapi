@@ -1,6 +1,6 @@
 # Match API
 
-This is a simple exercise to create a sample matchmaking app API. The API server is written in Golang. It makes use of [`gorrila/mux`](https://github.com/gorilla/mux) for HTTP multiplexing and [`teejays/gofildb`](https://github.com/teejays/gofiledb) (more on this below) for a persistent database.
+This is a simple exercise to create a sample matchmaking app API. The API server is written in Golang. It makes use of [`gorrila/mux`](https://github.com/gorilla/mux) for HTTP multiplexing and [`teejays/gofiledb`](https://github.com/teejays/gofiledb) (more on this below) for a persistent database.
 
 ## Installation
 
