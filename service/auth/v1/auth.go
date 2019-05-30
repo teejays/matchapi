@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/teejays/matchapi/lib/auth"
+	authLib "github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/auth/jwt"
 	"github.com/teejays/matchapi/service/user/v1"
 )
@@ -13,6 +14,9 @@ type LoginRequest struct {
 	Email    string
 	Password string
 }
+
+// TODO: this should probably not be hard coded here
+var PasswordSecretKey = "I am a disco dancer"
 
 var ErrInvalidEmail = fmt.Errorf("no accounts found with the given email")
 var ErrInvalidPassword = fmt.Errorf("accounts found but could not match the password")
@@ -36,7 +40,7 @@ func Login(req LoginRequest) (string, error) {
 	}
 
 	// hash the password
-	h, err := auth.GetHash(req.Password)
+	h, err := authLib.GetHash(req.Password, PasswordSecretKey)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +49,7 @@ func Login(req LoginRequest) (string, error) {
 	var u *user.User
 	var found bool
 	for _, c := range creds {
-		if h == c.PasswordHash && req.Email == c.Email {
+		if authLib.IsEqualHash(h, c.PasswordHash) && req.Email == c.Email {
 			// We have a user!
 			u, err = user.GetUserByID(c.ID)
 			if err != nil {
@@ -60,7 +64,13 @@ func Login(req LoginRequest) (string, error) {
 		return "", ErrInvalidPassword
 	}
 
-	// Get the JWT client and create a token 
+	// Get the JWT client and create a token
+	if !jwt.IsClientInitialized() {
+		err = auth.InitJWTClient()
+		if err != nil {
+			return "", err
+		}
+	}
 	cl, err := jwt.GetClient()
 	if err != nil {
 		return "", err

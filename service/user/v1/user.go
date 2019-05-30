@@ -24,10 +24,10 @@ var ErrEntityDoesNotExist = errors.New("the requested entity does not exist")
 
 // User represents the primary user object of the app
 type User struct {
-	ID           pk.ID
-	PasswordHash string
-	IsDeleted    bool
+	ID pk.ID
 	Profile
+	PasswordHash []byte
+	IsDeleted    bool
 	meta
 }
 
@@ -37,11 +37,23 @@ type meta struct {
 	DatetimeUpdated time.Time
 }
 
+// ProfileUser represents the editable part of the User with ID
+type ProfileUser struct {
+	ID pk.ID
+	Profile
+}
+
 // Profile represents the editable part of the User
 type Profile struct {
 	ShareableProfile
 	LastName string
 	Email    string
+}
+
+// ShareableProfileUser is a part of the profile that can be shared with other users
+type ShareableProfileUser struct {
+	ID pk.ID
+	ShareableProfile
 }
 
 // ShareableProfile is a part of the profile that can be shared with other users
@@ -55,17 +67,27 @@ type ShareableProfile struct {
 // a new user is created
 type NewUserRequest struct {
 	Profile
-	PasswordHash string
+	PasswordHash []byte
 }
 
+var ErrEmailAlreadyExist = fmt.Errorf("Email is already taken")
+
 // NewUser creates a new instance of a user object and stores it in the database
-func NewUser(req NewUserRequest) (*User, error) {
+func NewUser(req NewUserRequest) (*ProfileUser, error) {
 
 	// Validate that user data is okay
 	if err := req.Profile.Validate(); err != nil {
 		return nil, err
 	}
 
+	// Make sure we don't have a user already with the email
+	users, err := GetUserCredsByEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if len(users) > 0 {
+		return nil, ErrEmailAlreadyExist
+	}
 	// Create a new user object and populate it with data
 	var u User
 	u.Profile = req.Profile
@@ -73,6 +95,7 @@ func NewUser(req NewUserRequest) (*User, error) {
 	u.DatetimeCreated = time.Now()
 	u.DatetimeUpdated = time.Now()
 
+	clog.Debugf("NewUser Hash: %v", u.PasswordHash)
 	// Save it to DB and get the new ID
 	id, err := db.SaveNewEntity(db.UserCollection, &u)
 	if err != nil {
@@ -84,27 +107,33 @@ func NewUser(req NewUserRequest) (*User, error) {
 	var user User
 	err = db.GetEntityByID(db.UserCollection, id, &user)
 	if err != nil {
-		return &user, err
+		return nil, err
 	}
+	// We can't/shouldn't return the entire user object for security purposes
 
-	return &user, nil
+	safeUser := ProfileUser{
+		ID:      user.ID,
+		Profile: user.Profile,
+	}
+	return &safeUser, nil
 }
 
 // GetUserByID returns the user object corresponding to the provided userID
 func GetUserByID(id pk.ID) (*User, error) {
 	var user User
 	err := db.GetEntityByID(db.UserCollection, id, &user)
+	clog.Debugf("user.GetUserById(%v): \nuser: %v\nerr:%v", id, user, err)
 	if err != nil {
 		return nil, err
 	}
 
-	return &user, err
+	return &user, nil
 }
 
 type UserCred struct {
-	ID 			pk.ID
+	ID           pk.ID
 	Email        string
-	PasswordHash string
+	PasswordHash []byte
 }
 
 func GetUserCredsByEmail(email string) ([]UserCred, error) {
@@ -121,20 +150,21 @@ func GetUserCredsByEmail(email string) ([]UserCred, error) {
 		if !ok {
 			return nil, fmt.Errorf("error fetching users by email: one of the response is not a map[string]interface{}")
 		}
-		var c UserCred
 		id, ok := v["ID"].(float64)
 		if !ok {
 			return nil, fmt.Errorf("error fetching users by email: one of the response ID is not a number")
 		}
-		c.ID = pk.ID(id)
-		c.Email, ok = v["Email"].(string)
-		if !ok {
-			return nil, fmt.Errorf("error fetching users by email: one of the response emails is not a string")
+
+		var c UserCred
+		usr, err := GetUserByID(pk.ID(id))
+		if err != nil {
+			return creds, err
 		}
-		c.PasswordHash, ok = v["PasswordHash"].(string)
-		if !ok {
-			return nil, fmt.Errorf("error fetching users by email: one of the response password has is not a string")
-		}
+
+		c.ID = usr.ID
+		c.Email = usr.Email
+		c.PasswordHash = usr.PasswordHash
+
 		creds = append(creds, c)
 	}
 

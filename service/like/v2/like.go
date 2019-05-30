@@ -41,10 +41,12 @@ func (b BasicLike) Validate() error {
 		return fmt.Errorf("invalid ReceiverID: should be greater than 0")
 	}
 
+	clog.Debugf("BasicLike.Validate(): ReceiverId: %v", b.ReceiverID)
+
 	// ReceiverID should be a valid user
 	u, err := user.GetUserByID(b.ReceiverID)
 	if err != nil {
-		return fmt.Errorf("invalid ReceiverID: could not validate that a user exists with this userID")
+		return fmt.Errorf("invalid ReceiverID: could not validate that a user exists with this userID: %v", err)
 	}
 	if u == nil {
 		return fmt.Errorf("invalid ReceiverID: no user found with this userID")

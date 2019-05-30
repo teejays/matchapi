@@ -1,24 +1,24 @@
 package handler
 
 import (
-	"strings"
-	"io/ioutil"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/teejays/clog"
-	
-	"github.com/teejays/matchapi/service/auth/v1"
+
 	"github.com/teejays/matchapi/lib/rest"
+	"github.com/teejays/matchapi/service/auth/v1"
 )
 
 type LoginRequest struct {
-	Email string
+	Email    string
 	Password string
 }
 
-// HandleLogin logins a user 
+// HandleLogin logins a user
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -41,18 +41,25 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the request
 	if strings.TrimSpace(creds.Email) == "" {
-		clog.Error(err.Error())
-		http.Error(w, fmt.Sprintf("There was an error validating the request: %s", "email cannot be empty"), http.StatusBadRequest)
+		errMessage := fmt.Sprintf("There was an error validating the request: %s", "email cannot be empty")
+		clog.Error(errMessage)
+		http.Error(w, errMessage, http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(creds.Password) == "" {
-		clog.Error(err.Error())
-		http.Error(w, fmt.Sprintf("There was an error validating the request: %s", "password cannot be empty"), http.StatusBadRequest)
+		errMessage := fmt.Sprintf("There was an error validating the request: %s", "password cannot be empty")
+		clog.Error(errMessage)
+		http.Error(w, errMessage, http.StatusBadRequest)
 		return
 	}
 
 	// Find the user with these creds?
 	token, err := auth.Login(creds)
+	if err == auth.ErrInvalidEmail || err == auth.ErrInvalidPassword {
+		clog.Error(err.Error())
+		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		return
+	}
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -80,13 +87,6 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
-	}
-
-	_, err = w.Write([]byte(resp))
-	if err != nil {
-		clog.Error(err.Error())
-		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
 	}
-
 }

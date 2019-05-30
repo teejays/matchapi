@@ -42,7 +42,13 @@ func initClient(dir string) (*gofiledb.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create the gofiledb '%s' collection: %v", UserCollection, err)
 	}
-
+	
+	// Create the index on 'Email' field for login purposes
+	err = cl.AddIndex(UserCollection, "Email")
+	if err != nil {
+		return nil, fmt.Errorf("could not create the index 'ReceiverID' on '%s' collection: %v", LikeCollection, err)
+	}
+	
 	// Create the like collections
 	err = cl.AddCollection(gofiledb.CollectionProps{Name: LikeCollection, EncodingType: gofiledb.ENCODING_JSON})
 	if err != nil {

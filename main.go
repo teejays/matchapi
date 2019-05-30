@@ -64,14 +64,17 @@ func registerHandlers() {
 
 	// Create a new gorilla.mux router
 	r := mux.NewRouter()
-	
-	// Add a simple middleware function so we can log the requests
+
+	// Setup middlewares
 	r.Use(rest.LoggerMiddleware)
 	r.Use(rest.AddContextMiddleware)
-	
+
+	// Register Ping handler
+	r.HandleFunc("/ping", rest.PingHandler)
+
 	// Set up the routes
 
-	// 1. Unauthenticated Routes: We are going to goahead and deal with pseudo-authenticated
+	// 1. Unauthenticated Routes: We are going to go ahead and deal with pseudo-authenticated
 	// routes but first, let's create routes that do no need any authentication
 	// - Unauthenticated V1:
 	rv1 := r.PathPrefix("/v1").Subrouter()
@@ -79,7 +82,7 @@ func registerHandlers() {
 	rv1.HandleFunc("/login", handler.HandleLogin).Methods(http.MethodPost)
 
 	// 2. Authenticated Routes: These routes will run a middleware authentication function
-	a := r
+	a := r.PathPrefix("").Subrouter()
 	a.Use(rest.AuthenticateMiddleware)
 
 	// - Authenticated V1; Create a path that takes v1 as prefix
@@ -94,6 +97,7 @@ func registerHandlers() {
 	av2.HandleFunc("/like", handlerV2.HandlePostLike).Methods("POST")
 
 	// Register the router as the handler in the standard net/http package
+	// Add a simple middleware function so we can log the requests
 	http.Handle("/", r)
 
 }

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/lib/auth"
+	authLib "github.com/teejays/matchapi/lib/auth"
 	"github.com/teejays/matchapi/lib/rest"
+	"github.com/teejays/matchapi/service/auth/v1"
 	"github.com/teejays/matchapi/service/user/v1"
 )
 
@@ -18,7 +20,7 @@ import (
 func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := auth.GetUserIdFromRequest(r)
+	userID, err := authLib.GetUserIdFromRequest(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -28,17 +30,17 @@ func HandleGetUser(w http.ResponseWriter, r *http.Request) {
 	clog.Debugf("userID: %d", userID)
 
 	// Get the incoming likes for the user
-	user, err := user.GetUserByID(userID)
+	usr, err := user.GetUserByID(userID)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
 		return
 	}
 
-	clog.Debugf("UserID fetched: %v", user)
+	clog.Debugf("UserID fetched: %v", usr)
 
 	// Json marshal the response
-	resp, err := json.Marshal(user)
+	resp, err := json.Marshal(usr.Profile)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -64,6 +66,7 @@ type CreateUserRequest struct {
 	user.Profile
 	Password string
 }
+
 // HandleCreateUser ...
 // Example Request: curl -X "POST" localhost:8080/v1/user -d '{"FirstName":"Tom","LastName":"Harry", "Email": "tom.harry@email.com", "Gender": 3}'
 func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +87,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "There was an error json unmarshaling the request", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Validate that the profile is has all required info
 	err = req.Profile.Validate()
 	if err != nil {
@@ -94,14 +97,14 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the password hash after validating it
-	err = auth.IsStrongPassword(req.Password)
+	err = IsValidPassword(req.Password)
 	if err != nil {
 		clog.Error(err.Error())
-		http.Error(w, fmt.Sprintf("The password is not strong enough: %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("The password is invalid: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	passwordHash, err := auth.GetHash(req.Password)
+	passwordHash, err := authLib.GetHash(req.Password, auth.PasswordSecretKey)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -109,12 +112,17 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUserReq := user.NewUserRequest{
-		Profile : req.Profile,
-		PasswordHash : passwordHash,
+		Profile:      req.Profile,
+		PasswordHash: passwordHash,
 	}
 
 	// Update the profile of the given user
-	user, err := user.NewUser(newUserReq)
+	usr, err := user.NewUser(newUserReq)
+	if err == user.ErrEmailAlreadyExist {
+		clog.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -122,7 +130,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Json marshal the updated profile so we can send it back
-	resp, err := json.Marshal(user)
+	resp, err := json.Marshal(usr)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, rest.CleanAPIErrMessage, http.StatusInternalServerError)
@@ -146,7 +154,7 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	// Get the userID from the request
-	userID, err := auth.GetUserIdFromRequest(r)
+	userID, err := authLib.GetUserIdFromRequest(r)
 	if err != nil {
 		clog.Error(err.Error())
 		http.Error(w, "Could not authenticate the user", http.StatusUnauthorized)
@@ -214,4 +222,21 @@ func HandleUpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
 	clog.Info("Request succesfully processed")
 
+}
+
+// IsValidPassword validates that the password is good enough to be used
+func IsValidPassword(password string) error {
+
+	// password is not empty?
+	if strings.TrimSpace(password) == "" {
+		return fmt.Errorf("no password provided")
+	}
+
+	// password is not too short
+	minLength := 6
+	if len(password) < minLength {
+		return fmt.Errorf("password is too short, needs a minimum of %d characters", minLength)
+	}
+
+	return nil
 }
