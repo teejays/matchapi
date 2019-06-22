@@ -3,9 +3,9 @@ package auth
 import (
 	"fmt"
 
+	"github.com/teejays/go-jwt"
 	"github.com/teejays/matchapi/lib/auth"
 	authLib "github.com/teejays/matchapi/lib/auth"
-	"github.com/teejays/matchapi/lib/auth/jwt"
 	"github.com/teejays/matchapi/service/user/v1"
 )
 

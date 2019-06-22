@@ -11,7 +11,7 @@ import (
 
 	"github.com/teejays/clog"
 
-	"github.com/teejays/matchapi/lib/auth/jwt"
+	"github.com/teejays/go-jwt"
 	"github.com/teejays/matchapi/lib/pk"
 )
 
